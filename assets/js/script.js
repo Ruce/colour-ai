@@ -6,11 +6,19 @@ function checkEnter(event) {
 
 function inputReceived(textboxElement) {
 	const inputText = textboxElement.value;
-	textboxElement.value = "";
-	setRandomBoxColours();
+	if (inputText !== "") {
+		processInput(inputText);
+		textboxElement.value = "";
+	}
 	
+	testTensorflow();
+}
+
+function processInput(inputText) {
+	let prediction = Math.floor(Math.random() * 3);
+		
 	resetBoxHighlights();
-	highlightBox();
+	highlightBox(prediction);
 }
 
 function nextClicked() {
@@ -31,6 +39,11 @@ function setRandomBoxColours() {
 	const randomColour0 = generateRandomColour();
 	const randomColour1 = generateRandomColour();
 	const randomColour2 = generateRandomColour();
+	
+	currColours.colour0 = randomColour0;
+	currColours.colour1 = randomColour1;
+	currColours.colour2 = randomColour2;
+	
 	changeBoxColour(document.getElementById("box-0"), randomColour0);
 	changeBoxColour(document.getElementById("box-1"), randomColour1);
 	changeBoxColour(document.getElementById("box-2"), randomColour2);
@@ -55,13 +68,47 @@ function resetBoxHighlights() {
 	document.getElementById('box-2-outer').style.setProperty('border-color', 'transparent');
 }
 
-function highlightBox() {
-	let randBox = Math.floor(Math.random() * 3);
-	let boxId = `box-${randBox}-outer`;
+function highlightBox(prediction) {
+	let boxId = `box-${prediction}-outer`;
 	setTimeout(() => {
 		document.getElementById(boxId).classList.add('show-border');
 	}, 50);
 }
 
 
+
+
+
+
+
+async function testTensorflow() {
+	const model = tf.sequential();
+	model.add(tf.layers.dense({units: 1, inputShape: [1]}));
+
+	// Prepare the model for training: Specify the loss and the optimizer.
+	model.compile({loss: 'meanSquaredError', optimizer: 'sgd'});
+
+	// Generate some synthetic data for training. (y = 2x - 1)
+	const xs = tf.tensor2d([-1, 0, 1, 2, 3, 4], [6, 1]);
+	const ys = tf.tensor2d([-3, -1, 1, 3, 5, 7], [6, 1]);
+
+	// Train the model using the data.
+	await model.fit(xs, ys, {epochs: 50});
+	
+	console.log(model.predict(tf.tensor2d([20], [1, 1])).dataSync());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 document.addEventListener("DOMContentLoaded", setRandomBoxColours);
+let currColours = {}

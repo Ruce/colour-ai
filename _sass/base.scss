@@ -22,6 +22,10 @@ body {
   text-align: center;
 }
 
+.input-textbox {
+  margin: 15px 0;
+}
+
 .next-button {
   position: absolute;
   top: 50%;
@@ -38,8 +42,8 @@ body {
 }
 
 .colour-box {
-  height: $innerBoxSize;
-  width: $innerBoxSize;
+  width: 88%;
+  height: 88%;
   border: 1px solid black;
   background-color: red;
   position: absolute;
