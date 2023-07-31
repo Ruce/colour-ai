@@ -1,8 +1,11 @@
 $backgroundColor: #ffffff;
 $bodyColor: #000000;
 $bodyFont: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
-$boxSize: 160px;
-$boxMargin: 10px;
+$boxMargin: 5px;
+$outerBoxBorderColor: blue;
+$outerBoxBorderThickness: 4px;
+$outerBoxSize: 190px;
+$innerBoxSize: 160px;
 
 body {
   background: $backgroundColor;
@@ -15,15 +18,134 @@ body {
   margin: 0;
 }
 
-.container {
+.page-container {
   text-align: center;
 }
 
+.next-button {
+  position: absolute;
+  top: 50%;
+  display: inline-block;
+  transform: rotate(90deg);
+  font-family: Lucida Sans Unicode;
+  font-size: 64px;
+  color: #666666;
+  cursor: pointer;
+}
+
+.next-button:hover {
+  color: #000;
+}
+
 .colour-box {
-  height: $boxSize;
-  width: $boxSize;
+  height: $innerBoxSize;
+  width: $innerBoxSize;
   border: 1px solid black;
   background-color: red;
-  margin: $boxMargin;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.outer-box {
+  height: $outerBoxSize;
+  width: $outerBoxSize;
+  border: 3px solid transparent;
   display: inline-block;
+  position: relative;
+  margin: $boxMargin;
+  overflow: hidden;
+}
+
+.outer-box.show-border::before {
+  content: '';
+  position: absolute;
+  top: 0px;
+  left: -$outerBoxBorderThickness;
+  width: 100%;
+  height: 100%;
+  border-top: $outerBoxBorderThickness solid $outerBoxBorderColor;
+  border-right: $outerBoxBorderThickness solid $outerBoxBorderColor;
+  visibility: visible;
+  animation: topright 0.5s ease-in-out forwards;
+}
+
+.outer-box.show-border::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  right: -$outerBoxBorderThickness;
+  width: 100%;
+  height: 100%;
+  border-bottom: $outerBoxBorderThickness solid $outerBoxBorderColor;
+  border-left: $outerBoxBorderThickness solid $outerBoxBorderColor;
+  visibility: visible;
+  animation: bottomleft 0.5s ease-in-out forwards;
+}
+
+
+@keyframes topright {
+  0% {
+    width: 0;
+    height: 0;
+    padding-bottom: 0;
+    visibility: hidden;
+  }
+  25% {
+    width: 100%;
+    height: 0;
+    padding-bottom: 0;
+    visibility: visible;
+  }
+  50% {
+    width: 100%;
+    height: 100%;
+    padding-bottom: 0;
+    visibility: visible;
+  }
+  75% {
+    width: 100%;
+    height: 100%;
+    padding-bottom: 0;
+    visibility: visible;
+  }
+  100% {
+    width: 100%;
+    height: 100%;
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@keyframes bottomleft {
+  0% {
+    width: 0;
+    height: 0;
+    padding-top: 0;
+    visibility: hidden;
+  }
+  25% {
+    width: 0;
+    height: 0;
+    padding-top: 0;
+    visibility: hidden;
+  }
+  50% {
+    width: 0;
+    height: 0;
+    padding-top: 0;
+    visibility: hidden;
+  }
+  75% {
+    width: 100%;
+    height: 0;
+    padding-top: 0;
+    visibility: visible;
+  }
+  100% {
+    height: 100%;
+    width: 100%;
+    visibility: visible;
+  }
 }
