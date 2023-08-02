@@ -13,6 +13,9 @@ function inputReceived(textboxElement) {
 }
 
 function processInput(inputText) {
+	console.log(currColours);
+	console.log(vectorize_all(currColours));
+	
 	let prediction = Math.floor(Math.random() * 3);
 		
 	resetBoxHighlights();
@@ -38,9 +41,9 @@ function setRandomBoxColours() {
 	const randomColour1 = generateRandomColour();
 	const randomColour2 = generateRandomColour();
 	
-	currColours.colour0 = randomColour0;
-	currColours.colour1 = randomColour1;
-	currColours.colour2 = randomColour2;
+	currColours[0] = randomColour0;
+	currColours[1] = randomColour1;
+	currColours[2] = randomColour2;
 	
 	changeBoxColour(document.getElementById("box-0"), randomColour0);
 	changeBoxColour(document.getElementById("box-1"), randomColour1);
@@ -74,8 +77,6 @@ function highlightBox(prediction) {
 }
 
 
-
-
 function initialiseModel() {
 	const model = tf.sequential();
 	model.add(tf.layers.dense({units: 10, activation: 'relu', inputShape: [10]}));
@@ -101,16 +102,5 @@ async function runTensorflow() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 document.addEventListener("DOMContentLoaded", setRandomBoxColours);
-let currColours = {}
+var currColours = [];
