@@ -27,8 +27,9 @@ Tokeniser.heuristicSegmenter = function(word) {
 
 // Adapted from https://github.com/futurulus/coop-nets
 function vectorize_all(colors) {
+	// `colors` is an array of dimension (3, 3), where the first dimension is a colour sample and the second is the HSL value of the colour
     colors = [colors];
-    if (colors[0][0].length !== 3) {
+    if (colors[0].length !== 3 || colors[0][0].length !== 3) {
         throw new Error("Invalid colors shape.");
     }
 
@@ -70,16 +71,31 @@ function vectorize_all(colors) {
 		)
 	);
 	
-	const arg = math.add(math.add(argx, argy), argz);
-	const reprComplex = math.map(math.multiply(math.multiply(math.complex(0, -2), math.pi), math.mod(arg, 1)), math.exp)
+	const arg = math.matrix(math.add(math.add(argx, argy), argz));
+	const reprComplex = swapAxes(math.map(math.multiply(math.multiply(math.complex(0, -2), math.pi), math.mod(arg, 1)), math.exp));
 	
-	
-    //const flatArg = arg.map(c => c.flat(2));
-    //const result = flatArg.map(c => c.flat());
-    //const normalizedResult = result.map(normalize);
-    //return normalizedResult;
-}
+	function swapAxes(x) {
+	  let swappedMatrix = [];
+	  for (let i = 0; i < 3; i++) {
+		let outerSlice = [];
+		for (let j = 0; j < 3; j++) {
+		  let innerSlice = math.subset(x, math.index(i, math.range(0, 3), j, math.range(0, 3)));
+		  outerSlice.push(math.reshape(innerSlice, [3, 3]));
+		}
+		swappedMatrix.push(math.matrix(outerSlice));
+	  }
+	  swappedMatrix = math.matrix(swappedMatrix);
+	  return swappedMatrix;
+	}
+  
+	const reshappedRepr = math.reshape(reprComplex, [3, 27]);
+	const result = math.concat(math.re(reshappedRepr), math.im(reshappedRepr), 1);
 
-function normalize(v) {
-    return v.map(val => (Math.round(val * 100) / 100 === 0.0 ? 0.0 : Math.round(val * 100) / 100));
+	const normalized = math.map(result, v => roundValues(v, 2));
+	function roundValues(v, decimals) {
+		const roundedValue = math.round(v, decimals);
+		return roundedValue === 0 ? 0 : roundedValue;
+	}
+
+	return normalized;
 }
