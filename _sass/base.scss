@@ -23,14 +23,14 @@ body {
 }
 
 .input-textbox {
-  margin: 15px 0;
+  margin: 24px 0;
 }
 
 .next-button {
   position: absolute;
   top: 50%;
   display: inline-block;
-  transform: rotate(90deg);
+  transform: translate(0, -25%) rotate(90deg);
   font-family: Lucida Sans Unicode;
   font-size: 64px;
   color: #666666;
