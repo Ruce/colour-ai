@@ -26,22 +26,22 @@ Tokeniser.heuristicSegmenter = function(word) {
 }
 
 // Adapted from https://github.com/futurulus/coop-nets
-function vectorize_all(colors) {
-	// `colors` is an array of dimension (3, 3), where the first dimension is a colour sample and the second is the HSL value of the colour
-    colors = [colors];
-    if (colors[0].length !== 3 || colors[0][0].length !== 3) {
-        throw new Error("Invalid colors shape.");
+function vectorizeColours(colours) {
+	// `colours` is an array of dimension (3, 3), where the first dimension is a colour sample and the second is the HSL value of the colour
+    colours = [colours];
+    if (colours[0].length !== 3 || colours[0][0].length !== 3) {
+        throw new Error("Invalid colours shape.");
     }
 
     const ranges = [361.0, 101.0, 101.0];
-    const color_0_1 = colors.map(color =>
-        color.map(c => c.map((v, i) => v / (ranges[i] - 1.0)))
+    const colour_0_1 = colours.map(colour =>
+        colour.map(c => c.map((v, i) => v / (ranges[i] - 1.0)))
     );
 
-    // Using a Fourier representation causes colors at the boundary of the
+    // Using a Fourier representation causes colours at the boundary of the
     // space to behave as if the space is toroidal: red = 255 would be
     // about the same as red = 0. We don't want this...
-    const xyz = color_0_1[0].map(c => [c[0], c[1] / 2.0, c[2] / 2.0]);
+    const xyz = colour_0_1[0].map(c => [c[0], c[1] / 2.0, c[2] / 2.0]);
 	
 	// Meshgrid operations on ax, ay, az
 	const gx = Array(3).fill([Array(3).fill(0), Array(3).fill(1), Array(3).fill(2)]);
