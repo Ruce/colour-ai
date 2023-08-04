@@ -57,7 +57,7 @@ function setRandomBoxColours() {
 	currColours[0] = randomColour0;
 	currColours[1] = randomColour1;
 	currColours[2] = randomColour2;
-	currColourVectors = ColourModel.vectorizeColours(currColours)._data;
+	currColourVectors = ColourModel.vectorizeColours(currColours);
 }
 
 function getHslCssString(h, s, l) {
@@ -88,5 +88,5 @@ function highlightBox(prediction) {
 
 document.addEventListener("DOMContentLoaded", setRandomBoxColours);
 var currColours = [];
-var currColourVectors = [];
+var currColourVectors;
 const model = new ColourModel({vocabDim: 962, hiddenDim: 100, weights: listenerModelWeights});

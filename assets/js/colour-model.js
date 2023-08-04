@@ -51,19 +51,8 @@ class ScoreLayer extends tf.layers.Layer {
 		const diagIndices = tf.range(0, 9, 4, 'int32');
 		const scoresLogits = scoresMatrix.reshape([scoresMatrix.shape[0], 9]).gather(diagIndices, 1).mul(tf.scalar(-1)); // Resulting shape (n, 3)
 		const scores = scoresLogits.softmax();
-				
-		/**
-		const repMatrix = tf.reshape(rep, [rep.shape[0], rep.shape[1], 1]); // Unsqueeze last dimension of rep for later matrix operations, resulting shape (n, 54, 1)
-		const scores = []
-		for (let i = 0; i < 3; i++) {
-			let cv = cVec.slice([0, i, 0], [cVec.shape[0], i+1, this.colourVectorDim]).reshape([cVec.shape[0], this.colourVectorDim, 1]); // Resulting shape (n, 54, 1)
-			let delta = cv.sub(repMatrix); // Resulting shape (n, 54, 1)
-			let deltaT = delta.transpose([0, 2, 1]); // Resulting shape (n, 1, 54)
-			let score = tf.matMul(tf.matMul(deltaT, covMatrix), delta); // Resulting shape (n, 1, 1)
-			scores.push(score.squeeze());
-		}
-		return tf.stack(scores, 1);**/
-		return scores
+		
+		return scores;
 	}
 	
 	getClassName() { return 'ColourScores'; }
@@ -82,75 +71,48 @@ class ColourModel {
 	// Adapted from https://github.com/futurulus/coop-nets
 	static vectorizeColours(colours) {
 		// `colours` is an array of dimension (3, 3), where the first dimension is a colour sample and the second is the HSL value of the colour
-		colours = [colours];
-		if (colours[0].length !== 3 || colours[0][0].length !== 3) {
+		colours = tf.tensor2d(colours);
+	
+		if (colours.shape[0] !== 3 || colours.shape[0] !== 3) {
 			throw new Error("Invalid colours shape.");
 		}
 
-		const ranges = [361.0, 101.0, 101.0];
-		const colour_0_1 = colours.map(colour =>
-			colour.map(c => c.map((v, i) => v / (ranges[i] - 1.0)))
-		);
+		const ranges = tf.tensor1d([361.0, 101.0, 101.0]);
+		const colour_0_1 = colours.div(ranges.sub(tf.scalar(1.0)));
 
 		// Using a Fourier representation causes colours at the boundary of the
 		// space to behave as if the space is toroidal: red = 255 would be
 		// about the same as red = 0. We don't want this...
-		const xyz = colour_0_1[0].map(c => [c[0], c[1] / 2.0, c[2] / 2.0]);
+		const xyz = colour_0_1.div(tf.tensor1d([1, 2, 2]));
+    
+		// Meshgrid operations on three [0, 1, 2] vectors
+		const gz = tf.broadcastTo(tf.range(0, 3), [3, 3, 3]);
+		const gx = gz.transpose([0, 2, 1]);
+		const gy = gz.transpose([2, 1, 0]);
 		
-		// Meshgrid operations on ax, ay, az
-		const gx = Array(3).fill([Array(3).fill(0), Array(3).fill(1), Array(3).fill(2)]);
-		const gy = [Array(3).fill(Array(3).fill(0)), Array(3).fill(Array(3).fill(1)), Array(3).fill(Array(3).fill(2))];
-		const gz = Array(3).fill(Array(3).fill([0, 1, 2]));
+			// Outer multiplication between xyz and gx, gy, gz respectively
+		// Get first column (3,) from xyz (3,3), and outerProduct with gx
+		const xyz_x = xyz.slice([0, 0], [3, 1]).squeeze();
+		const argx = tf.einsum('i,jkl->ijkl', xyz_x, gx);
 		
-		// Outer multiplication between xyz and gx, gy, gz respectively
-		const argx = xyz.map(a => a[0]).map(x =>
-			gx.map(dim0 => 
-				dim0.map(dim1 =>
-					dim1.map(dim2 => x*dim2)
-				)
-			)
-		);
-		const argy = xyz.map(a => a[1]).map(y =>
-			gy.map(dim0 => 
-				dim0.map(dim1 =>
-					dim1.map(dim2 => y*dim2)
-				)
-			)
-		);
-		const argz = xyz.map(a => a[2]).map(z =>
-			gz.map(dim0 => 
-				dim0.map(dim1 =>
-					dim1.map(dim2 => z*dim2)
-				)
-			)
-		);
+		// Get second column (3,) from xyz (3,3), and outerProduct with gy
+		const xyz_y = xyz.slice([0, 1], [3, 1]).squeeze();
+		const argy = tf.einsum('i,jkl->ijkl', xyz_y, gy);
 		
-		const arg = math.matrix(math.add(math.add(argx, argy), argz));
-		const reprComplex = swapAxes(math.map(math.multiply(math.multiply(math.complex(0, -2), math.pi), math.mod(arg, 1)), math.exp));
+		// Get third column (3,) from xyz (3,3), and outerProduct with gz
+		const xyz_z = xyz.slice([0, 2], [3, 1]).squeeze();
+		const argz = tf.einsum('i,jkl->ijkl', xyz_z, gz);
+			
+		const argTf = argx.add(argy).add(argz);
 		
-		function swapAxes(x) {
-		  let swappedMatrix = [];
-		  for (let i = 0; i < 3; i++) {
-			let outerSlice = [];
-			for (let j = 0; j < 3; j++) {
-			  let innerSlice = math.subset(x, math.index(i, math.range(0, 3), j, math.range(0, 3)));
-			  outerSlice.push(math.reshape(innerSlice, [3, 3]));
-			}
-			swappedMatrix.push(math.matrix(outerSlice));
-		  }
-		  swappedMatrix = math.matrix(swappedMatrix);
-		  return swappedMatrix;
-		}
-	  
-		const reshappedRepr = math.reshape(reprComplex, [3, 27]);
-		const result = math.concat(math.re(reshappedRepr), math.im(reshappedRepr), 1);
-
-		const normalized = math.map(result, v => roundValues(v, 2));
-		function roundValues(v, decimals) {
-			const roundedValue = math.round(v, decimals);
-			return roundedValue === 0 ? 0 : roundedValue;
-		}
-
+		// Use mathjs library here because TensorflowJS exp() does not support complex numbers
+		const arg = math.matrix(argTf.arraySync());
+		const reprComplex = math.map(math.multiply(math.multiply(math.complex(0, -2), math.pi), math.mod(arg, 1)), math.exp);
+		
+		const reprComplexTf = tf.complex(math.re(reprComplex)._data, math.im(reprComplex)._data);
+		const reshappedRepr = reprComplexTf.transpose([0, 2, 1, 3]);
+		const result = tf.concat([tf.real(reshappedRepr).reshape([3, 27]), tf.imag(reshappedRepr).reshape([3, 27])], 1);
+		const normalized = result.mul(100).round().div(100); // Round to 2 digits
 		return normalized;
 	}
 
@@ -188,7 +150,8 @@ class ColourModel {
 	}
 
 	predict(inputIndices, currColourVectors) {
-		const predictedScores = this.model.predict([tf.tensor([inputIndices]), tf.tensor([currColourVectors])]);
+		const colourVectors = currColourVectors.expandDims(); // Add a new dimension at axis 0 to make this a batch
+		const predictedScores = this.model.predict([tf.tensor([inputIndices]), colourVectors]);
 		predictedScores.print(); // Do we flatten the predictedScores?
 		return predictedScores.argMax(1).dataSync();
 	}

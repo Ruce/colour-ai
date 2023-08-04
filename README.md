@@ -1,8 +1,10 @@
 # Colour AI
 
-![Screenshot of main page](/assets/img/MainScreenshot.png?raw=true "Screenshot")
+![Screenshot of main page](/assets/img/ColoursScreenshot.png?raw=true "Screenshot")
 
-Describe one of the three colours shown and see if the AI guesses the colour you picked!
+Describe one of the three displayed colours and see if the AI guesses the colour you picked!
+
+**Try it at (https://ruce.github.io/colour-ai/)**
 
 ## About
 
