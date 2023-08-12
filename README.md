@@ -10,6 +10,10 @@ Describe one of the three displayed colours and see if the AI guesses the colour
 
 A simple project that uses the models from my Master's thesis, _Representing Vagueness with Probabilistic Semantics_ (publication pending), which explores the linguistics of colours in a contextual setting. Based on the dataset and prior work by [Monroe et al. (2017)](https://aclanthology.org/Q17-1023/).
 
+Models and support code were originally developed in Python using PyTorch for my thesis. In this repository, the code and models have been ported to JavaScript and Tensorflow.js so that the app runs as an offline static site.
+
+### Model Architecture
+
 ![Listener model architecture](/assets/img/ListenerModelArchitecture.png?raw=true "Listener Model")
 
 The listener model comprises of an encoder and a scoring function to predict a colour from the input text. The encoder embeds the tokens, pushes them through an LSTM layer, and passes the final state over linear layers to generate a representation with mean $\mu$ and covariance $\Sigma$ in a high-dimensional colour space.
